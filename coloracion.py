@@ -28,6 +28,50 @@ def restriccion_fila_columna(matrix_colors: np.ndarray, cumple = True) -> bool:
 	#retornamos el booleano que dira si se han cumplido las restricciones			
 	return cumple			
 
+def restriccion_dos_fila_columna(matrix_colors: np.ndarray, cumple = True) -> bool:
+	#primero evaluaremos las filas y luego las columnas (range(2)), iremos de una en una y las compararemos con todas 
+	#las demas analizando si cumple los requisitos de las restricciones
+	t:int = 0
+	while cumple and t < 2:
+		i: int = 0
+		while cumple and i < matrix_colors.shape[t]:
+			#tendremos que comparar cada fila con las demas por lo que construimos una nueva matriz que contiene a todas menos esta fila
+			matrix_colors_new: np.ndarray = np.delete(matrix_colors, i, axis = t)
+			j: int = 0
+			while cumple and j < matrix_colors_new.shape[t]:
+				suma_restriccion1: int = 0
+				suma_restriccion2: int = 0
+				k: int = 0
+				#si son filas compararemos de una forma y si son columnas de otra
+				while cumple and k < matrix_colors_new.shape[(t + 1) % 2]:
+					#FILAS
+					if t == 0:
+						if (matrix_colors[i, k] == 2 and matrix_colors_new[j, k] == 3) or (matrix_colors[i, k] == 2 and matrix_colors_new[j, k] == 4) or (matrix_colors[i, k] == 3 and matrix_colors_new[j, k] == 4):	
+							print('jaksj')
+							suma_restriccion1 += 1
+						if (matrix_colors[i, k] == 2 and matrix_colors_new[j, k] == 3) or (matrix_colors[i, k] == 2 and matrix_colors_new[j, k] == 4) or (matrix_colors[i, k] == 3 and matrix_colors_new[j, k] == 3) or (matrix_colors[i, k] == 4 and matrix_colors_new[j, k] == 4):
+							print('asjd')
+							suma_restriccion2 += 1	
+					#COLUMNAS
+					elif t == 1:
+						if (matrix_colors[k, i] == 2 and matrix_colors_new[k, j] == 3) or (matrix_colors[k, i] == 2 and matrix_colors_new[k, j] == 4) or (matrix_colors[k, i] == 3 and matrix_colors_new[k, j] == 4):	
+							suma_restriccion1 += 1
+						if (matrix_colors[k, i] == 2 and matrix_colors_new[k, j] == 3) or (matrix_colors[k, i] == 2 and matrix_colors_new[k, j] == 4) or (matrix_colors[k, i] == 3 and matrix_colors_new[k, j] == 3) or (matrix_colors[k, i] == 4 and matrix_colors_new[k, j] == 4):
+							suma_restriccion2 += 1
+					k += 1		
+					
+				#comprobamos que la suma final ha dado un numero par
+				if suma_restriccion1 % 2 != 0 or suma_restriccion2 % 2 != 0:
+					cumple = False
+				j += 1
+			i += 1		
+		t += 1	
+
+
+	#retornamos el booleano que dira si se han cumplido las restricciones		
+	print(cumple)	
+	return cumple				
+
 def coloracion(matrix_qube: np.ndarray, matrix_colors: np.ndarray) -> np.array:
 	# 0 = sin color
 	# 1 = rojo
@@ -50,6 +94,7 @@ def coloracion(matrix_qube: np.ndarray, matrix_colors: np.ndarray) -> np.array:
 	
 	#debemos comprobar que estos nuevos colores cumplen las restricciones impuestas
 	cumple_restriccion_fila_columna: bool = restriccion_fila_columna(matrix_colors)
+	cumple_restriccion_dos_fila_columna: bool = restriccion_dos_fila_columna(matrix_colors)
 
 	if cumple_restriccion_fila_columna:
 		return matrix_colors
@@ -65,3 +110,9 @@ matrix_qube = np.array([[complex(1, 2), complex(3, 4), 4], [1, 2, 4]], dtype = c
 
 #actualizamos los valores de los colores
 matrix_colors = coloracion(matrix_qube, matrix_colors)
+
+test_matrix = np.array([[3, 1, 3], [4, 1, 4], [1, 1, 1]])
+print(test_matrix)
+restriccion_dos_fila_columna(test_matrix)
+#deberia dar true
+
