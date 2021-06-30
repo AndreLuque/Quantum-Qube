@@ -15,7 +15,8 @@ class QuantumQube():
 
     def __init__(self, matrix: np.ndarray):
         self.__matrix = matrix
-        self.__color_matrix = QuantumQube.get_color_matrix(matrix)
+        #self.__color_matrix = QuantumQube.get_color_matrix(matrix)
+        self.__color_matrix = np.array([[4, 3, 4, 4], [3, 3, 4, 4], [3, 3, 4, 1], [4, 3, 1, 4]])
         if not self.is_reducible():
             raise ValueError('The given QuantumQube is not reducible')
 
@@ -130,15 +131,79 @@ class QuantumQube():
         #actualizamos los colores
         self.__color_matrix = QuantumQube.get_color_matrix(self.__matrix)
 
+    def rotacion() -> NoReturn:
+        pass
+
+    def forma_estandar(self, fila_o_columna: int, numero_fila_columna: int, cumple: bool = True) -> bool:
+        """
+        se tiene que cumplir que si dividimos todas las filas y todas las columnas por la mitad, las dos mitades tendran como par la suma entre nodos verdes y morados
+        
+        la variable fila_o_columna nos indicara si estamos comparando dos filas o dos columnas
+        0 -> filas 
+        1 -> columnas
+
+        la variable numero_fila_columna nos indica que filas o columnas, 1-2 o 3-4
+        0 -> 1-2
+        2 -> 3-4
+
+        """
+        #FILA
+        if fila_o_columna == 0:
+            i: int = 0
+            while cumple and i < 4:
+                total_verde_morado1: int = 0 #comparamos las cuatro parejas horizontales
+                total_verde_morado2: int = 0 #comparamos las cuatro parejas verticales
+                #vamos de pareja en pareja horizontal y analizamos si se cumple la paridad
+                if i % 2 == 0:
+                    total_verde_morado1 += (self.__color_matrix[(i % 2) + numero_fila_columna, 0] == 3 or self.__color_matrix[(i % 2) + numero_fila_columna, 0] == 4)
+                    total_verde_morado1 += (self.__color_matrix[(i % 2) + numero_fila_columna, 1] == 3 or self.__color_matrix[(i % 2) + numero_fila_columna, 1] == 4)
+                else: 
+                    total_verde_morado1 += (self.__color_matrix[(i % 2) + numero_fila_columna, 2] == 3 or self.__color_matrix[(i % 2) + numero_fila_columna, 2] == 4)
+                    total_verde_morado1 += (self.__color_matrix[(i % 2) + numero_fila_columna, 3] == 3 or self.__color_matrix[(i % 2) + numero_fila_columna, 3] == 4)
+                #vamos de parjea en pareja vertical y analizamos si se cumple la paridad
+                total_verde_morado2 += (self.__color_matrix[numero_fila_columna, i] == 3 or self.__color_matrix[numero_fila_columna, i] == 4)
+                total_verde_morado2 += (self.__color_matrix[1 + numero_fila_columna, i] == 3 or self.__color_matrix[1 + numero_fila_columna, i] == 4)
+                #condicion de paridad
+                if total_verde_morado1 % 2 != 0 or total_verde_morado2 % 2 != 0:
+                  cumple = False
+                i += 1
+        #COLUMNA        
+        else:
+            i: int = 0
+            while cumple and i < 4:
+                total_verde_morado1: int = 0 #comparamos las cuatro parejas horizontales
+                total_verde_morado2: int = 0 #comparamos las cuatro parejas verticales
+                #vamos de pareja en pareja vertical y analizamos si se cumple la paridad
+                if i % 2 == 0:
+                    total_verde_morado1 += (self.__color_matrix[0, (i % 2) + numero_fila_columna] == 3 or self.__color_matrix[0, (i % 2) + numero_fila_columna] == 4)
+                    total_verde_morado1 += (self.__color_matrix[1, (i % 2) + numero_fila_columna] == 3 or self.__color_matrix[1, (i % 2) + numero_fila_columna] == 4)
+                else: 
+                    total_verde_morado1 += (self.__color_matrix[2, (i % 2) + numero_fila_columna] == 3 or self.__color_matrix[2, (i % 2) + numero_fila_columna] == 4)
+                    total_verde_morado1 += (self.__color_matrix[3, (i % 2) + numero_fila_columna] == 3 or self.__color_matrix[3, (i % 2) + numero_fila_columna] == 4)
+                #vamos de parjea en pareja horizontal y analizamos si se cumple la paridad
+                total_verde_morado2 += (self.__color_matrix[i, numero_fila_columna] == 3 or self.__color_matrix[i, numero_fila_columna] == 4)
+                total_verde_morado2 += (self.__color_matrix[i, 1 + numero_fila_columna] == 3 or self.__color_matrix[i, 1 + numero_fila_columna] == 4)
+                #condicion de paridad
+                if total_verde_morado1 % 2 != 0 or total_verde_morado2 % 2 != 0:
+                  cumple = False
+                i += 1
+
+        print(cumple)       
+        return cumple
+            
+
+
 
 
 #tests
-matrix_qube = np.array([[complex(1, 2), complex(3, 4), 4, 4], [1, 2, 4, 4]], dtype = complex)
+matrix_qube = np.array([[3, 4, 4, 4], [1, 2, 4, 4], [3, 3, 4, 1], [2, 1, 1, 4]], dtype = complex)
 qube = QuantumQube(matrix_qube)
-qube.permutacion_columnas(2)   
+#qube.permutacion_columnas(2)   
 
 print(qube.color_matrix)
-qube.cambio_de_colores(1, 0)
+#qube.cambio_de_colores(1, 0)
 print(qube.color_matrix)
+
+qube.forma_estandar(1, 0)
 
 
