@@ -1,209 +1,146 @@
-import numpy as np
-from copy import deepcopy
-from typing import List, TypeVar, NoReturn, Optional, Tuple
-
-
-H_2 = 1/np.sqrt(2) * np.array([[1, 1],
-                               [1, -1]])
-V = np.array([[1, 0],
-             [0, 1j]])
-
-
-class QuantumQube():
-
-    matrix: np.ndarray
-
-    def __init__(self, matrix: np.ndarray):
-        self.__matrix = matrix
-        #self.__color_matrix = QuantumQube.get_color_matrix(matrix)
-        self.__color_matrix = np.array([[4, 3, 4, 4], [3, 3, 4, 4], [3, 3, 4, 1], [4, 3, 1, 4]])
-        if not self.is_reducible():
-            raise ValueError('The given QuantumQube is not reducible')
-
-    @property
-    def color_matrix(self) -> np.ndarray:
-        return self.__color_matrix
-
-    @property
-    def matrix(self) -> np.ndarray:
-        return self.__matrix
-
-    @staticmethod
-    def get_color(z: complex) -> int:
-        """
-        colours:
-        (par, par) -> red -> 1
-        (impar, impar) -> blue -> 2
-        (par, impar) -> purple -> 3
-        (impar, par) -> green -> 4
-        :param z: a complex number
-        :return: the colour (int)
-        """
-        if z.real % 2:
-            if z.imag % 2:
-                return 1
-            else:
-                return 3
-        elif z.imag % 2:
-            return 4
-        else:
-            return 2
-
-    @staticmethod
-    def get_color_matrix(matrix: np.ndarray) -> np.ndarray:
-        color_matrix = np.zeros(matrix.shape)
-
-        for i, row in enumerate(matrix):
-            for j, value in enumerate(row):
-                color_matrix[i][j] = QuantumQube.get_color(value)
-
-        return color_matrix
-
-    def get_submatrices(self, inplace: bool = False) -> Tuple[np.ndarray, np.ndarray,
-                                                      np.ndarray, np.ndarray]:
-        """
-        Se divide la matriz en cuatro submatrices conservando la matriz original. Notación:
-        número del cuadrante: [1, 2]
-                              [3, 4]
-        :param inplace: si es True, devolverá una copia de las matrices. Si está desactivado, todos los cambios que se
-                        realicen a las submatrices afectarán a 'self.__matrix' y viceversa. Desactivado por defecto.
-        :return: (cuadrante 1, cuadrante 2, cuadrante 3, cuadrante 4)
-        """
-        n = len(self.__matrix)
-        if inplace:
-            a = self.__matrix[:n // 2, :n // 2]
-            b = self.__matrix[:n // 2, n // 2:]
-            c = self.__matrix[:n // 2, :n // 2]
-            d = self.__matrix[:n // 2, :n // 2]
-        else:
-            a = deepcopy(self.__matrix[:n // 2, :n // 2])
-            b = deepcopy(self.__matrix[:n // 2, n // 2:])
-            c = deepcopy(self.__matrix[:n // 2, :n // 2])
-            d = deepcopy(self.__matrix[:n // 2, :n // 2])
-
-        return a, b, c, d
-
-    def is_reducible(self) -> bool:
-        return True
-
-    #definimos las funciones que representaran las transformaciones
-    def permutacion_filas(self, tipo_permutacion: int) -> NoReturn:
-        """
-        el valor entero dado por la variable tipo_permutacion nos indicara que filas se permutan
-        1 -> filas 0 y 1
-        2 -> filas 1 y 2
-        3 -> filas 2 y 3
-        """
-        self.__matrix[[tipo_permutacion - 1, tipo_permutacion], :] = self.__matrix[[tipo_permutacion, tipo_permutacion - 1], :]
-
-        #actualizamos los colores
-        self.__color_matrix = QuantumQube.get_color_matrix(self.__matrix)
-        
-    def permutacion_columnas(self, tipo_permutacion: int) -> NoReturn:
-        """
-        el valor entero dado por la variable tipo_permutacion nos indicara que filas se permutan
-        1 -> columnas 0 y 1
-        2 -> columnas 1 y 2
-        3 -> columnas 2 y 3
-        4 -> columnas 3 y 0
-        """
-        self.__matrix[:, [tipo_permutacion - 1, tipo_permutacion % 4]] = self.__matrix[:, [tipo_permutacion % 4, tipo_permutacion - 1]]        
-
-        #actualizamos los colores
-        self.__color_matrix = QuantumQube.get_color_matrix(self.__matrix)
-
-    def cambio_de_colores(self, columna_o_fila: int, numero_columna_fila: int) -> NoReturn:
-        """
-        el valor de la variable columna_o_fila nos indicara si hacemos el cambio de color en una fila o columna
-        0 -> fila
-        1 -> columna
-        
-        el valor de la variable numero_columna_fila nos indicara en que fila o columna hay que hacer el cambio de color
-
-        solo se podrá cambiar los morados a verdes y viceversa. Esto se hace multiplicando i por esa fila o columna
-        cambiara la parte real e imaginaria de par a impar y de impar a par haciendo que se cambien estos colores.
-        """        
-        if columna_o_fila == 0:
-            self.__matrix[numero_columna_fila, :] = self.__matrix[numero_columna_fila, :] * complex(0, 1)
-        else:
-            self.__matrix[:, numero_columna_fila] = self.__matrix[:, numero_columna_fila] * complex(0, 1)    
-
-        #actualizamos los colores
-        self.__color_matrix = QuantumQube.get_color_matrix(self.__matrix)
-
-    def rotacion() -> NoReturn:
-        pass
-
-    def forma_estandar(self, fila_o_columna: int, numero_fila_columna: int, cumple: bool = True) -> bool:
-        """
-        se tiene que cumplir que si dividimos todas las filas y todas las columnas por la mitad, las dos mitades tendran como par la suma entre nodos verdes y morados
-        
-        la variable fila_o_columna nos indicara si estamos comparando dos filas o dos columnas
-        0 -> filas 
-        1 -> columnas
-
-        la variable numero_fila_columna nos indica que filas o columnas, 1-2 o 3-4
-        0 -> 1-2
-        2 -> 3-4
-
-        """
-        #FILA
-        if fila_o_columna == 0:
-            i: int = 0
-            while cumple and i < 4:
-                total_verde_morado1: int = 0 #comparamos las cuatro parejas horizontales
-                total_verde_morado2: int = 0 #comparamos las cuatro parejas verticales
-                #vamos de pareja en pareja horizontal y analizamos si se cumple la paridad
-                if i % 2 == 0:
-                    total_verde_morado1 += (self.__color_matrix[(i % 2) + numero_fila_columna, 0] == 3 or self.__color_matrix[(i % 2) + numero_fila_columna, 0] == 4)
-                    total_verde_morado1 += (self.__color_matrix[(i % 2) + numero_fila_columna, 1] == 3 or self.__color_matrix[(i % 2) + numero_fila_columna, 1] == 4)
-                else: 
-                    total_verde_morado1 += (self.__color_matrix[(i % 2) + numero_fila_columna, 2] == 3 or self.__color_matrix[(i % 2) + numero_fila_columna, 2] == 4)
-                    total_verde_morado1 += (self.__color_matrix[(i % 2) + numero_fila_columna, 3] == 3 or self.__color_matrix[(i % 2) + numero_fila_columna, 3] == 4)
-                #vamos de parjea en pareja vertical y analizamos si se cumple la paridad
-                total_verde_morado2 += (self.__color_matrix[numero_fila_columna, i] == 3 or self.__color_matrix[numero_fila_columna, i] == 4)
-                total_verde_morado2 += (self.__color_matrix[1 + numero_fila_columna, i] == 3 or self.__color_matrix[1 + numero_fila_columna, i] == 4)
-                #condicion de paridad
-                if total_verde_morado1 % 2 != 0 or total_verde_morado2 % 2 != 0:
-                  cumple = False
-                i += 1
-        #COLUMNA        
-        else:
-            i: int = 0
-            while cumple and i < 4:
-                total_verde_morado1: int = 0 #comparamos las cuatro parejas horizontales
-                total_verde_morado2: int = 0 #comparamos las cuatro parejas verticales
-                #vamos de pareja en pareja vertical y analizamos si se cumple la paridad
-                if i % 2 == 0:
-                    total_verde_morado1 += (self.__color_matrix[0, (i % 2) + numero_fila_columna] == 3 or self.__color_matrix[0, (i % 2) + numero_fila_columna] == 4)
-                    total_verde_morado1 += (self.__color_matrix[1, (i % 2) + numero_fila_columna] == 3 or self.__color_matrix[1, (i % 2) + numero_fila_columna] == 4)
-                else: 
-                    total_verde_morado1 += (self.__color_matrix[2, (i % 2) + numero_fila_columna] == 3 or self.__color_matrix[2, (i % 2) + numero_fila_columna] == 4)
-                    total_verde_morado1 += (self.__color_matrix[3, (i % 2) + numero_fila_columna] == 3 or self.__color_matrix[3, (i % 2) + numero_fila_columna] == 4)
-                #vamos de parjea en pareja horizontal y analizamos si se cumple la paridad
-                total_verde_morado2 += (self.__color_matrix[i, numero_fila_columna] == 3 or self.__color_matrix[i, numero_fila_columna] == 4)
-                total_verde_morado2 += (self.__color_matrix[i, 1 + numero_fila_columna] == 3 or self.__color_matrix[i, 1 + numero_fila_columna] == 4)
-                #condicion de paridad
-                if total_verde_morado1 % 2 != 0 or total_verde_morado2 % 2 != 0:
-                  cumple = False
-                i += 1
-
-        print(cumple)       
-        return cumple
-            
+import numpy as np 
+import random
 
 
 
 
-#tests
-matrix_qube = np.array([[3, 4, 4, 4], [1, 2, 4, 4], [3, 3, 4, 1], [2, 1, 1, 4]], dtype = complex)
-qube = QuantumQube(matrix_qube)
-#qube.permutacion_columnas(2)   
-
-print(qube.color_matrix)
-#qube.cambio_de_colores(1, 0)
-print(qube.color_matrix)
-
-qube.forma_estandar(1, 0)
+def mv(num):
+	if num.real % 2 == 1 and num.imag % 2 == 0:
+		return True
+	elif num.real % 2 == 0 and num.imag % 2 == 1:
+		return True
+	else:
+		return False
 
 
+def check(m): # PENDIENTE DE REVISION
+	for i in range(4):
+		columnas = 0
+		filas = 0
+		for j in range(4):
+			if mv(m[j][i]):
+				columnas += 1
+			if mv(m[i][j]):
+				filas += 1
+
+		if columnas%2 != 0 or filas%2 != 0:
+			return False
+	return True	
+
+
+
+'''
+def check1(m): # PENDIENTE DE REVISION
+	filas = []
+	columnas = []
+
+	for i in range(4):
+		filas.append([m[i][j] for j in range(4)])
+		columnas.append([m[j][i] for j in range(4)])
+
+	#print('\nFILAS')
+	for k in filas:
+		count = 0
+		for h in k:
+			if mv(h):
+				count += 1
+		#print(f'fila: {k}, hits: {count}')
+		if count %2 != 0:
+			return False
+
+	#print('\nCOLUMNAS')
+	for k in columnas:
+		count = 0
+		for h in k:
+			if mv(h):
+				count += 1
+		#print(f'columna: {k}, hits: {count}')
+		if count %2 != 0:
+			return False
+	
+
+	return True	
+
+l = np.array([[complex( 7,  2), complex(-2, -2), complex( 1, -1), complex( 0,  1)],
+			  [complex( 3,  0), complex( 6,  4), complex( 1,  1), complex( 0, -1)],
+			  [complex(-1, -1), complex(-1,  1), complex( 7,  1), complex(-1,  3)],
+			  [complex( 0,  0), complex( 1, -1), complex(-1,  3), complex( 6,  4)]])
+
+check(l)
+'''
+
+def get_complex():
+	a = random.randint(-10, 10)
+	b = random.randint(-10, 10)
+	return complex(a, b)
+
+
+
+def Gram_Schmidt(m):
+	v1 = m[0]
+	v2 = m[1]
+	v3 = m[2]
+	v4 = m[3]
+
+	u1 = v1
+
+	u2 = v2 - (np.vdot(u1,v2)/np.vdot(u1,u1))*u1 
+	u2 *= np.vdot(u1,u1)
+
+	u3 = v3 - (np.vdot(u1,v3)/np.vdot(u1,u1))*u1 - (np.vdot(u2,v3)/np.vdot(u2,u2))*u2
+	u3 *= np.vdot(u1,u1) * np.vdot(u2,u2)
+
+	u4 = v4 - (np.vdot(u1,v4)/np.vdot(u1,u1))*u1 - (np.vdot(u2,v4)/np.vdot(u2,u2))*u2 - (np.vdot(u3,v4)/np.vdot(u3,u3))*u3
+	u4 *= np.vdot(u1,u1) * np.vdot(u2,u2) * np.vdot(u3,u3)
+
+	return np.array([u1, u2, u3, u4])
+
+
+
+'''
+
+print('Waiting user to start.')
+attempts = int(input('Number of attempts: '))
+
+print('Start processing...')
+
+hit1 = 0
+hit2 = 0
+for i in range(attempts):
+	h = np.array([[get_complex() for _ in range(4)] for _ in range(4)])
+	if np.linalg.matrix_rank(h) == 4:
+		hit1 += 1
+		m = Gram_Schmidt(h)
+		if check(m):
+			hit2 += 1
+			#print(f'\nMatrix found!\nMatrix found after {i} tries. ')
+			#print('Matrix:\n', m)
+			#print()
+
+print('\nSummary:')
+print(f'Total attempts: {attempts}   Matrix base hits: {hit1}   Total Matrix accurated hits: {hit2}  Missing: {attempts - hit2}  Hit rate: {round(100*hit2/attempts, 3)}%')		
+input()
+
+'''
+
+print('Waiting user to start.')
+attempts = int(input('Number of attempts: '))
+
+def main():
+	print('Start processing...')
+
+	hit1 = 0
+	hit2 = 0
+	for i in range(attempts):
+		h = np.array([[get_complex() for _ in range(4)] for _ in range(4)])
+		if np.linalg.matrix_rank(h) == 4:
+			hit1 += 1
+			m = Gram_Schmidt(h)
+			if check(m):
+				return i
+	return attempts
+
+
+print('\nSummary:')
+print(f'Total attempts: {attempts}   Total attempts needed: {main()}')		
+input()
