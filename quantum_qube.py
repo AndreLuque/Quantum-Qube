@@ -15,8 +15,6 @@ class QuantumQube:
         self.__matrix = matrix
         # self.__color_matrix = QuantumQube.get_color_matrix(matrix)
         self.__color_matrix = np.array([[4, 3, 4, 4], [3, 3, 4, 4], [3, 3, 4, 1], [4, 3, 1, 4]])
-        if not self.is_reducible():
-            raise ValueError('The given QuantumQube is not reducible')
 
     @property
     def color_matrix(self) -> np.ndarray:
@@ -57,6 +55,10 @@ class QuantumQube:
 
         return color_matrix
 
+    def update_color_matrix(self) -> NoReturn:
+        # actualizamos los colores
+        self.__color_matrix = QuantumQube.get_color_matrix(self.__matrix)
+
     def get_submatrices(self, inplace: bool = False) -> Tuple[np.ndarray, np.ndarray,
                                                               np.ndarray, np.ndarray]:
         """
@@ -81,9 +83,6 @@ class QuantumQube:
 
         return a, b, c, d
 
-    def is_reducible(self) -> bool:
-        return True
-
     # definimos las funciones que representaran las transformaciones
     def permutacion_filas(self, tipo: int) -> NoReturn:
         """
@@ -93,7 +92,7 @@ class QuantumQube:
         3 -> filas 2 y 3
         """
         self.__matrix[[tipo - 1, tipo], :] = self.__matrix[
-                                                                     [tipo, tipo - 1], :]
+                                             [tipo, tipo - 1], :]
 
         # actualizamos los colores
         self.__color_matrix = QuantumQube.get_color_matrix(self.__matrix)
@@ -128,12 +127,12 @@ class QuantumQube:
             self.__matrix[:, numero_columna_fila] = self.__matrix[:, numero_columna_fila] * complex(0, 1)
 
         # actualizamos los colores
-        self.__color_matrix = QuantumQube.get_color_matrix(self.__matrix)
+        self.update_color_matrix()
 
-    def rotacion(self) -> NoReturn:
+    def rotacion(self, ) -> NoReturn:
         pass
 
-    def forma_estandar(self, fila_o_columna: int, numero_fila_columna: int, cumple: bool = True) -> bool:
+    def forma_estandar(self, fila_o_columna: int, num_fila_columna: int, cumple: bool = True) -> bool:
         """
         se tiene que cumplir que si dividimos todas las filas y todas las columnas por la mitad, las dos mitades tendran
         como par la suma entre nodos verdes y morados
@@ -145,7 +144,6 @@ class QuantumQube:
         la variable numero_fila_columna nos indica que filas o columnas, 1-2 o 3-4
         0 -> 1-2
         2 -> 3-4
-
         """
         # FILA
         if fila_o_columna == 0:
@@ -156,23 +154,23 @@ class QuantumQube:
                 # vamos de pareja en pareja horizontal y analizamos si se cumple la paridad
                 if i % 2 == 0:
                     total_verde_morado1 += (
-                                self.__color_matrix[(i % 2) + numero_fila_columna, 0] == 3 or self.__color_matrix[
-                                    (i % 2) + numero_fila_columna, 0] == 4)
+                            self.__color_matrix[(i % 2) + num_fila_columna, 0] == 3 or
+                            self.__color_matrix[(i % 2) + num_fila_columna, 0] == 4)
                     total_verde_morado1 += (
-                                self.__color_matrix[(i % 2) + numero_fila_columna, 1] == 3 or self.__color_matrix[
-                                    (i % 2) + numero_fila_columna, 1] == 4)
+                            self.__color_matrix[(i % 2) + num_fila_columna, 1] == 3 or
+                            self.__color_matrix[(i % 2) + num_fila_columna, 1] == 4)
                 else:
                     total_verde_morado1 += (
-                                self.__color_matrix[(i % 2) + numero_fila_columna, 2] == 3 or self.__color_matrix[
-                                    (i % 2) + numero_fila_columna, 2] == 4)
+                            self.__color_matrix[(i % 2) + num_fila_columna, 2] == 3 or
+                            self.__color_matrix[(i % 2) + num_fila_columna, 2] == 4)
                     total_verde_morado1 += (
-                                self.__color_matrix[(i % 2) + numero_fila_columna, 3] == 3 or self.__color_matrix[
-                                    (i % 2) + numero_fila_columna, 3] == 4)
+                            self.__color_matrix[(i % 2) + num_fila_columna, 3] == 3 or
+                            self.__color_matrix[(i % 2) + num_fila_columna, 3] == 4)
                 # vamos de parjea en pareja vertical y analizamos si se cumple la paridad
-                total_verde_morado2 += (self.__color_matrix[numero_fila_columna, i] == 3 or self.__color_matrix[
-                    numero_fila_columna, i] == 4)
-                total_verde_morado2 += (self.__color_matrix[1 + numero_fila_columna, i] == 3 or self.__color_matrix[
-                    1 + numero_fila_columna, i] == 4)
+                total_verde_morado2 += (self.__color_matrix[num_fila_columna, i] == 3 or self.__color_matrix[
+                    num_fila_columna, i] == 4)
+                total_verde_morado2 += (self.__color_matrix[1 + num_fila_columna, i] == 3 or self.__color_matrix[
+                    1 + num_fila_columna, i] == 4)
                 # condicion de paridad
                 if total_verde_morado1 % 2 != 0 or total_verde_morado2 % 2 != 0:
                     cumple = False
@@ -186,34 +184,74 @@ class QuantumQube:
                 # vamos de pareja en pareja vertical y analizamos si se cumple la paridad
                 if i % 2 == 0:
                     total_verde_morado1 += (
-                                self.__color_matrix[0, (i % 2) + numero_fila_columna] == 3 or
-                                self.__color_matrix[0, (i % 2) + numero_fila_columna] == 4)
+                            self.__color_matrix[0, (i % 2) + num_fila_columna] == 3 or
+                            self.__color_matrix[0, (i % 2) + num_fila_columna] == 4)
                     total_verde_morado1 += (
-                                self.__color_matrix[1, (i % 2) + numero_fila_columna] == 3 or
-                                self.__color_matrix[1, (i % 2) + numero_fila_columna] == 4)
+                            self.__color_matrix[1, (i % 2) + num_fila_columna] == 3 or
+                            self.__color_matrix[1, (i % 2) + num_fila_columna] == 4)
                 else:
                     total_verde_morado1 += (
-                                self.__color_matrix[2, (i % 2) + numero_fila_columna] == 3 or
-                                self.__color_matrix[2, (i % 2) + numero_fila_columna] == 4)
+                            self.__color_matrix[2, (i % 2) + num_fila_columna] == 3 or
+                            self.__color_matrix[2, (i % 2) + num_fila_columna] == 4)
                     total_verde_morado1 += (
-                                self.__color_matrix[3, (i % 2) + numero_fila_columna] == 3 or
-                                self.__color_matrix[3, (i % 2) + numero_fila_columna] == 4)
+                            self.__color_matrix[3, (i % 2) + num_fila_columna] == 3 or
+                            self.__color_matrix[3, (i % 2) + num_fila_columna] == 4)
                 # vamos de parjea en pareja horizontal y analizamos si se cumple la paridad
-                total_verde_morado2 += (self.__color_matrix[i, numero_fila_columna] == 3 or
-                                        self.__color_matrix[i, numero_fila_columna] == 4)
-                total_verde_morado2 += (self.__color_matrix[i, 1 + numero_fila_columna] == 3 or
-                                        self.__color_matrix[i, 1 + numero_fila_columna] == 4)
+                total_verde_morado2 += (self.__color_matrix[i, num_fila_columna] == 3 or
+                                        self.__color_matrix[i, num_fila_columna] == 4)
+                total_verde_morado2 += (self.__color_matrix[i, 1 + num_fila_columna] == 3 or
+                                        self.__color_matrix[i, 1 + num_fila_columna] == 4)
                 # condicion de paridad
                 if total_verde_morado1 % 2 != 0 or total_verde_morado2 % 2 != 0:
                     cumple = False
                 i += 1
 
-        print(cumple)
         return cumple
 
+    def mezcla(self, fila_o_columna: int, num_fila_columna: int) -> NoReturn:
+        """
 
-if __name__ == "__main__":
-    # tests
+        :param fila_o_columna: 0 -> fila, 1 -> columna
+        :param num_fila_columna: nos indicara en que filas o columnas hay que hacer la mezcla o rotación.
+        1 -> MX12, 2 ->  MX23, 3 -> MX34, 4 -> MC41 (solo para columnas)
+        :return:
+        """
+        if fila_o_columna == 0 and num_fila_columna == 3:
+            raise ValueError("La rotación/mezcla 41 solo está permitada para las columnas por motivos estéticos")
+
+        m = np.identity(4, complex)
+        i = num_fila_columna - 1
+        j = num_fila_columna % 4
+
+        if j < i:
+            i, j = j, i
+
+        m[i][i] = (1 + 1j) / 2
+        m[i][j] = (1 - 1j) / 2 if fila_o_columna == 0 else (1 + 1j) / 2
+        m[j][i] = (1 + 1j) / 2 if fila_o_columna == 0 else (1 - 1j) / 2
+        m[j][j] = (-1 + 1j) / 2
+
+        self.__matrix = m @ self.__matrix if fila_o_columna == 0 else self.__matrix @ m
+        self.update_color_matrix()
+
+
+def test_mezcla():
+    # Hay una errata en las diapositivas, el método mezcla funciona correctamenete
+    matrix_qube = np.array([[7 + 2j, -2 - 2j, 1 - 1j, 1j],
+                            [3, 6 + 4j, 1 + 1j, -1j],
+                            [-1 - 1j, -1 + 1j, 7 + 1j, -1 + 3j],
+                            [0, 1 - 1j, -1 + 3j, 6 + 4j]])
+    m = np.array([[0.5 + 0.5j, 0, 0, 0.5 + 0.5j],
+                  [0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [0.5 - 0.5j, 0, 0, -0.5 + 0.5j]])
+    print(matrix_qube @ m)
+    qube = QuantumQube(matrix_qube)
+    qube.mezcla(1, 4)
+    print(qube.matrix)
+
+
+def test1():
     matrix_qube = np.array([[3, 4, 4, 4], [1, 2, 4, 4], [3, 3, 4, 1], [2, 1, 1, 4]], dtype=complex)
     qube = QuantumQube(matrix_qube)
     # qube.permutacion_columnas(2)
@@ -222,4 +260,8 @@ if __name__ == "__main__":
     # qube.cambio_de_colores(1, 0)
     print(qube.color_matrix)
 
-    qube.forma_estandar(1, 0)
+    print(qube.forma_estandar(1, 0))
+
+
+if __name__ == "__main__":
+    test_mezcla()
